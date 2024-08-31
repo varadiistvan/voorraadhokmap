@@ -1,0 +1,15 @@
+<div class="items">
+  <h2>Items</h2>
+  {% for item in items %} {% include "item.html" %} {% endfor %}
+
+  <input type="text"
+    name="name"
+    placeholder="Add a new item"
+    style="margin-left: 0.5rem"
+    onkeydown="if(event.key === 'Enter') { this.dispatchEvent(new Event('submit', {bubbles: true})); }"
+    hx-post="/admin/item" 
+    hx-target="closest .items" 
+    hx-swap="outerHTML" 
+    hx-trigger="submit"
+  ></input>
+</div>

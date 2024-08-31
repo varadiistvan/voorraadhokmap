@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title></title>
+    <script
+      src="https://unpkg.com/htmx.org@2.0.2"
+      integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"
+      integrity="sha384-PCSoOZTpbkikBEtd/+uV3WNdc676i9KUf01KOA8CnJotvlx8rRrETbDuwdjqTYvt"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      .item {
+        margin-bottom: 3rem;
+        padding: 0.5rem;
+        width: 18rem;
+        box-shadow:
+          rgba(0, 0, 0, 0.25) 0px 54px 55px,
+          rgba(0, 0, 0, 0.12) 0px -12px 30px,
+          rgba(0, 0, 0, 0.12) 0px 4px 6px,
+          rgba(0, 0, 0, 0.17) 0px 12px 13px,
+          rgba(0, 0, 0, 0.09) 0px -3px 5px;
+      }
+
+      .delete {
+        color: red;
+      }
+
+      .deletable {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        width: 15rem;
+      }
+    </style>
+  </head>
+  <body>
+    {{ columns|safe }}
+    <br />
+    {{ items|safe }}
+  </body>
+</html>

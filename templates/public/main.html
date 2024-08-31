@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voorraadhok map</title>
+    <script
+      src="https://unpkg.com/htmx.org@2.0.2"
+      integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"
+      integrity="sha384-PCSoOZTpbkikBEtd/+uV3WNdc676i9KUf01KOA8CnJotvlx8rRrETbDuwdjqTYvt"
+      crossorigin="anonymous"
+    ></script>
+    <style>
+      svg {
+        border: 1px solid #ddd;
+        margin: 20px;
+      }
+
+      #suggestions {
+        position: absolute;
+        top: 20px
+        left: 0;
+        border: 1px solid #ddd;
+        max-width: 200px;
+        background-color: white;
+        padding: 5px;
+        z-index: 1000;
+        box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+        display: none;
+      }
+
+      .suggestion-item {
+        cursor: pointer;
+        padding: 3px 5px;
+      }
+
+      .suggestion-item:hover {
+        background-color: #f0f0f0;
+      }
+
+      #search-container {
+        position: relative;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="search-container">
+      <input
+        type="text"
+        id="search-bar"
+        placeholder="Search..."
+        oninput="fuzzySearch(this.value)"
+        onkeydown="handleEnter(event)"
+        onfocus="fuzzySearch(this.value)"
+        onblur="document.getElementById('suggestions').style.display = 'none'"
+      />
+      <div id="suggestions"></div>
+    </div>
+
+    {{ crates|safe }}
+
+    <script>
+      // Dynamically generated search terms from Askama
+      const terms = [
+        {% for (displayname, aliases) in search_terms %}
+          {
+            displayname: "{{ displayname }}",
+            aliases: [{% for alias in aliases %}"{{ alias }}",{% endfor %}]
+          },
+        {% endfor %}
+      ];
+
+      // Configure Fuse.js to search in 'displayname' and 'aliases', but only show 'displayname' in results
+      const fuse = new Fuse(terms, {
+        keys: ['displayname', 'aliases'], // Search in these fields
+        includeScore: true,
+        threshold: 0.3
+      });
+
+      let lastResults = [];
+
+      function fuzzySearch(query) {
+        const results = fuse.search(query);
+        lastResults = results;
+        const suggestions = document.getElementById("suggestions");
+        suggestions.innerHTML = "";
+
+        if(results.length > 0) {
+          suggestions.style.display = "block";
+        } else {
+          suggestions.style.display = "none";
+        }
+
+        results.forEach(result => {
+          const item = document.createElement("div");
+          item.className = "suggestion-item";
+          item.textContent = result.item.displayname; // Show only the displayname
+          item.onmousedown = function () {
+            console.log("picsa")
+            selectSuggestion(result.item.displayname); // Pass displayname for updating crates
+          };
+          suggestions.appendChild(item);
+        });
+      }
+
+      function handleEnter(event) {
+        if (event.key === "Enter") {
+          if (lastResults.length > 0) {
+            selectSuggestion(lastResults[0].item.displayname);
+          }
+        }
+      }
+
+      function selectSuggestion(term) {
+        // Update crates dynamically based on the selected suggestion
+        htmx.ajax('GET', '/rectangles/' + encodeURIComponent(term), {
+          target: '#crates-container',
+          swap: 'innerHTML'
+        });
+        document.getElementById('suggestions').innerHTML = ''; // Clear suggestions
+      }
+    </script>
+  </body>
+</html>

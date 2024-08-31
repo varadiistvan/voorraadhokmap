@@ -1,0 +1,34 @@
+<svg width="400" height="1600">
+  <g>
+    <title>Outline</title>
+    <path id="svg_2" d="m0,1400l0,-1400" stroke="#000" fill="none" />
+    <line id="svg_3" y2="0" x2="400" y1="0" x1="0" stroke="#000" fill="none" />
+    <line
+      id="svg_4"
+      y2="1600"
+      x2="400"
+      y1="0"
+      x1="400"
+      stroke="#000"
+      fill="none"
+    />
+    <line
+      id="svg_5"
+      y2="1600"
+      x2="0"
+      y1="1600"
+      x1="400"
+      stroke="#000"
+      fill="none"
+    />
+  </g>
+  <!-- HTMX will replace this section dynamically -->
+  <g id="crates-container" hx-swap="innerHTML">
+    {% for (section, columns) in sections %}
+    <g>
+      <title>Section {{ section }}</title>
+      {% for col in columns %} {{ col|safe }} {% endfor %}
+    </g>
+    {% endfor %}
+  </g>
+</svg>

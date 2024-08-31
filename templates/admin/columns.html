@@ -1,0 +1,5 @@
+<div>
+  {% for section in crate::admin::columns::REGULAR_SECTIONS %} {{ section }} {%
+  for column in columns.get(section) %} {{ column|json }} {% endfor %} {% endfor
+  %}
+</div>

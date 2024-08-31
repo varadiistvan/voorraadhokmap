@@ -1,0 +1,32 @@
+<div class="item">
+  <div  class="deletable" style="margin-bottom: 0.8rem">
+    <input type="text" 
+      name="name"
+      value="{{ item.name }}" 
+      onkeydown="if(event.key === 'Enter') { this.dispatchEvent(new Event('submit', {bubbles: true})); }"
+      hx-put="/admin/item/{{ item.name }}" 
+      hx-target="closest .item" 
+      hx-swap="outerHTML" 
+      hx-trigger="submit">
+    </input>
+    <div hx-delete="/admin/item/{{ item.name }}" hx-target="closest .items" hx-swap="outerHTML" class="delete">
+      x
+    </div>
+  </div>
+
+  {% for alias in item.aliases %} 
+  <div class="deletable" style="margin-bottom: 0.5rem">
+    <div>{{ alias }}</div>
+    <div hx-delete="/admin/item/{{ item.name }}/{{ alias }}" hx-target="closest .item" hx-swap="outerHTML" class="delete" >x</div>
+  </div>
+  {% endfor %}
+  <input type="text"
+    name="alias"
+    placeholder="Add a new alias for {{ item.name }}"
+    onkeydown="if(event.key === 'Enter') { this.dispatchEvent(new Event('submit', {bubbles: true})); }"
+    hx-post="/admin/item/{{ item.name }}" 
+    hx-target="closest .item" 
+    hx-swap="outerHTML" 
+    hx-trigger="submit"
+  ></input>
+</div>
