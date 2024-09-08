@@ -2,13 +2,13 @@ use std::collections::HashMap;
 
 use askama::Template;
 
-use crate::models::{Crate, Item, Section};
+use crate::models::{Column, Crate, Item, Section};
 
 #[derive(Template)]
 #[template(path = "admin/admin.html")]
 pub struct AdminTemplate {
-    pub items: ItemsTemplate,
-    pub columns: ColumnsTemplate,
+    pub items: Vec<Item>,
+    pub columns: HashMap<Section, Vec<Column>>,
 }
 
 #[derive(Template)]
@@ -26,7 +26,7 @@ pub struct ItemTemplate {
 #[derive(Template)]
 #[template(path = "admin/columns.html")]
 pub struct ColumnsTemplate {
-    pub columns: HashMap<Section, Vec<Crate>>,
+    pub columns: HashMap<Section, Vec<Column>>,
 }
 
 #[derive(Template)]

@@ -14,11 +14,88 @@
       integrity="sha384-PCSoOZTpbkikBEtd/+uV3WNdc676i9KUf01KOA8CnJotvlx8rRrETbDuwdjqTYvt"
       crossorigin="anonymous"
     ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.3/Sortable.min.js"
+      integrity="sha384-/jkFGhPVLS9HIUzX09xB5W3coE5q1X5NXZA/PuOAdOaRxUPczlZmKzYEq9QcJnW0"
+      crossorigin="anonymous"
+    ></script>
+
+    <script defer>
+      const toRun = (content) => {
+        const sortables = content.querySelectorAll(".sortable");
+        for (let i = 0; i < sortables.length; i++) {
+          const sortable = sortables[i];
+          const sortableInstance = new Sortable(sortable, {
+            group: "shared",
+            animation: 150,
+            ghostClass: "blue-background-class",
+
+            // Make the `.htmx-indicator` unsortable
+            filter: ".sortable-ignore",
+            onMove: function (evt) {
+              return evt.related.className.indexOf("htmx-indicator") === -1;
+            },
+
+            // Disable sorting on the `end` event
+            onEnd: function (evt) {
+              const sections = document.querySelectorAll("div[data-section]");
+
+              const payload = Array.from(sections).map((sectionElement) => {
+                const sectionName = sectionElement.getAttribute("data-section");
+                const crateElements = sectionElement.querySelectorAll(".crate");
+                const crateIds = Array.from(crateElements).map((crate) => {
+                  return crate.getAttribute("value"); // crate ID from `value` attribute
+                });
+
+                return {
+                  section: sectionName,
+                  crates: crateIds,
+                };
+              });
+
+              fetch("/admin/crates/update-crate-order", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+              })
+                .then((response) => response.text())
+                .then((response) => {
+                  document.querySelector("#columns-container").outerHTML =
+                    response;
+                  toRun(document);
+                });
+            },
+
+            scrollSensitivity: 80,
+            forceFallback: true,
+          });
+        }
+      };
+      htmx.onLoad(toRun);
+    </script>
+
     <style>
+      .sortable,
+      .crate {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+      }
+
       .item {
         margin-bottom: 3rem;
         padding: 0.5rem;
         width: 18rem;
+      }
+
+      .crate {
+        width: 18rem;
+        padding: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .shadowed {
         box-shadow:
           rgba(0, 0, 0, 0.25) 0px 54px 55px,
           rgba(0, 0, 0, 0.12) 0px -12px 30px,
@@ -37,11 +114,15 @@
         justify-content: space-between;
         width: 15rem;
       }
+
+      .blue-background-class {
+        background: lightblue;
+      }
     </style>
   </head>
   <body>
-    {{ columns|safe }}
+    {% include "columns.html" %}
     <br />
-    {{ items|safe }}
+    {% include "items.html" %}
   </body>
 </html>

@@ -28,18 +28,28 @@ async fn main() {
     dotenvy::dotenv().unwrap();
     let config = envy::from_env::<Config>().unwrap();
 
-    let app = Router::new()
-        .route("/", get(public::index))
-        .route("/rectangles/:term", get(public::get_crates))
-        .route("/admin", get(admin::index))
-        .route("/admin/item", post(admin::create_item))
+    let admin_routes = Router::new()
+        .route("/", get(admin::index))
+        .route("/item", post(admin::create_item))
         .route(
-            "/admin/item/:name",
+            "/item/:name",
             put(admin::change_name)
                 .post(admin::create_alias)
                 .delete(admin::delete_item),
         )
-        .route("/admin/item/:item_name/:alias", delete(admin::delete_alias))
+        .route("/item/:item_name/:alias", delete(admin::delete_alias))
+        .route(
+            "/crates/update-crate-order",
+            post(admin::update_crate_order),
+        );
+
+    let public_routes = Router::new()
+        .route("/", get(public::index))
+        .route("/rectangles/:term", get(public::get_crates));
+
+    let app = Router::new()
+        .nest("/", public_routes)
+        .nest("/admin", admin_routes)
         .with_state(Arc::new(AppState {
             admin_password: config.admin_password,
             pool: SqlitePool::connect(&config.database_url).await.unwrap(),

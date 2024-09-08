@@ -6,6 +6,7 @@ use axum_extra::{
     headers::{authorization::Basic, Authorization},
     TypedHeader,
 };
+use fake::{faker, Fake, Faker};
 pub use items::*;
 
 mod columns;
@@ -18,7 +19,7 @@ mod utils;
 use utils::*;
 
 use crate::{
-    models::{Crate, CrateType, Rotation, Section},
+    models::{Column, Crate, CrateType, Rotation, Section},
     AppState,
 };
 
@@ -30,22 +31,18 @@ pub async fn index(
 
     let items = get_items(&state).await?;
 
-    let columns = HashMap::from([(
-        Section::A,
-        vec![Crate {
-            id: 0,
-            content: vec![],
-            rotation: Rotation::ShortSideWall,
-            crate_type: CrateType {
-                width: 30.0,
-                height: 30.0,
-                name: "Fake Square".into(),
-            },
-        }],
-    )]);
+    let columns = HashMap::from([
+        (
+            Section::A,
+            vec![Faker.fake(), Faker.fake(), Faker.fake(), Faker.fake()],
+        ),
+        (Section::B, vec![Faker.fake(), Faker.fake()]),
+        (Section::C, vec![]),
+        (Section::D, vec![]),
+        (Section::E, vec![]),
+    ]);
 
-    Ok(AdminTemplate {
-        items: ItemsTemplate { items },
-        columns: ColumnsTemplate { columns },
-    })
+    println!("{columns:?}");
+
+    Ok(AdminTemplate { items, columns })
 }

@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-use askama::Template;
 use axum::extract::Path;
 
 use templates::*;
@@ -8,8 +7,6 @@ mod templates;
 
 pub async fn index() -> MainTemplate {
     let crates = get_crates(Path("".into())).await;
-
-    println!("{}", crates.render().unwrap());
 
     MainTemplate {
         crates,
