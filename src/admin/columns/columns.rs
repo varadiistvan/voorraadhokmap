@@ -13,8 +13,6 @@ pub struct UpdateCrateOrderRequest {
 
 #[debug_handler]
 pub async fn update_crate_order(body: String) -> ColumnsTemplate {
-    println!("{body:?}");
-
     ColumnsTemplate {
         columns: Faker.fake(),
     }
