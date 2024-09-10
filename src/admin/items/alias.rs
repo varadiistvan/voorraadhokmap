@@ -14,7 +14,7 @@ use serde::Deserialize;
 use sqlx::query;
 
 use crate::{
-    admin::{authenticate, get_item_by_name, query_error_to_internal, ItemTemplate},
+    admin::{get_item_by_name, query_error_to_internal, ItemTemplate},
     AppState,
 };
 
@@ -24,12 +24,10 @@ pub struct CreateAliasForm {
 }
 
 pub async fn create_alias(
-    auth_header: Result<TypedHeader<Authorization<Basic>>, impl Error>,
     State(state): State<Arc<AppState>>,
     Path(item_name): Path<String>,
     Form(body): Form<CreateAliasForm>,
 ) -> Result<ItemTemplate, Response<Body>> {
-    authenticate(auth_header, &state.admin_password)?;
     let mut item = get_item_by_name(&item_name, &state).await?;
 
     let _succ = query!(
@@ -51,8 +49,6 @@ pub async fn delete_alias(
     State(state): State<Arc<AppState>>,
     Path((item_name, alias)): Path<(String, String)>,
 ) -> Result<ItemTemplate, Response<Body>> {
-    authenticate(auth_header, &state.admin_password)?;
-
     let mut item = get_item_by_name(&item_name, &state).await?;
 
     if !item.aliases.contains(&alias) {

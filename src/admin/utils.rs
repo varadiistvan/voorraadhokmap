@@ -1,12 +1,6 @@
-use std::error::Error;
-
 use axum::{
     body::Body,
-    http::{header, Response, StatusCode},
-};
-use axum_extra::{
-    headers::{authorization::Basic, Authorization},
-    TypedHeader,
+    http::{Response, StatusCode},
 };
 use sqlx::query;
 
@@ -17,32 +11,6 @@ pub fn query_error_to_internal(e: sqlx::Error) -> Response<Body> {
         .status(StatusCode::INTERNAL_SERVER_ERROR)
         .body(Body::from(format!("{e:?}")))
         .unwrap()
-}
-
-pub fn authenticate(
-    auth_header: Result<TypedHeader<Authorization<Basic>>, impl Error>,
-    admin_password: &str,
-) -> Result<(), Response<Body>> {
-    let Ok(TypedHeader(Authorization(basic))) = auth_header else {
-        let response = Response::builder()
-            .status(StatusCode::UNAUTHORIZED)
-            .header(header::WWW_AUTHENTICATE, r#"Basic realm="Admin Area""#)
-            .body(Body::empty())
-            .unwrap();
-
-        return Err(response);
-    };
-
-    if basic.username() != "admin" || basic.password() != admin_password {
-        let response = Response::builder()
-            .status(StatusCode::UNAUTHORIZED)
-            .header(header::WWW_AUTHENTICATE, r#"Basic realm="Admin Area""#)
-            .body(Body::empty())
-            .unwrap();
-        return Err(response);
-    }
-
-    Ok(())
 }
 
 pub async fn get_items(state: &AppState) -> Result<Vec<Item>, Response<Body>> {
@@ -80,6 +48,7 @@ pub async fn get_items(state: &AppState) -> Result<Vec<Item>, Response<Body>> {
         .collect();
     Ok(items)
 }
+
 pub async fn get_item_by_name(item_name: &str, state: &AppState) -> Result<Item, Response<Body>> {
     let Ok(item) = query!(
         r#"

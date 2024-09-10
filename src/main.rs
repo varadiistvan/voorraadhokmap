@@ -1,25 +1,27 @@
 use std::sync::Arc;
 
-use axum::{
-    routing::{delete, get, post, put},
-    Router,
-};
+use axum::Router;
+use middleware::AuthLayer;
 use serde::Deserialize;
 use sqlx::SqlitePool;
+use tower::ServiceBuilder;
+use tower_http::compression::CompressionLayer;
+use tracing_subscriber::util::SubscriberInitExt;
 
 #[derive(Deserialize, Debug)]
 struct Config {
     admin_password: String,
+    admin_username: String,
     database_url: String,
 }
 
 #[derive(Debug)]
 struct AppState {
-    admin_password: String,
     pool: sqlx::SqlitePool,
 }
 
 mod admin;
+mod middleware;
 mod models;
 mod public;
 
@@ -28,32 +30,20 @@ async fn main() {
     dotenvy::dotenv().unwrap();
     let config = envy::from_env::<Config>().unwrap();
 
-    let admin_routes = Router::new()
-        .route("/", get(admin::index))
-        .route("/item", post(admin::create_item))
-        .route(
-            "/item/:name",
-            put(admin::change_name)
-                .post(admin::create_alias)
-                .delete(admin::delete_item),
-        )
-        .route("/item/:item_name/:alias", delete(admin::delete_alias))
-        .route(
-            "/crates/update-crate-order",
-            post(admin::update_crate_order),
-        );
-
-    let public_routes = Router::new()
-        .route("/", get(public::index))
-        .route("/rectangles/:term", get(public::get_crates));
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::INFO)
+        .init();
 
     let app = Router::new()
-        .nest("/", public_routes)
-        .nest("/admin", admin_routes)
+        .nest("/", public::get_public_routes())
+        .nest(
+            "/admin",
+            admin::get_admin_routes(AuthLayer::new(config.admin_username, config.admin_password)),
+        )
         .with_state(Arc::new(AppState {
-            admin_password: config.admin_password,
             pool: SqlitePool::connect(&config.database_url).await.unwrap(),
-        }));
+        }))
+        .layer(ServiceBuilder::new().layer(CompressionLayer::new()));
 
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await

@@ -1,8 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
-use axum::extract::Path;
+use axum::{extract::Path, routing::get, Router};
 
 use templates::*;
+
+use crate::AppState;
 mod templates;
 
 pub async fn index() -> MainTemplate {
@@ -34,4 +36,10 @@ pub async fn get_crates(Path(term): Path<String>) -> CratesTemplate {
             }],
         )]),
     }
+}
+
+pub fn get_public_routes() -> Router<Arc<AppState>> {
+    Router::new()
+        .route("/", get(index))
+        .route("/rectangles/:term", get(get_crates))
 }
