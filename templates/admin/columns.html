@@ -5,11 +5,11 @@
     {% for columns in columns.get(section) %} {% if columns.is_empty() %}
     <div class="sortable">Drop crate here</div>
     {% else %} {% for column in columns %}
-    <div>
+    <div class="shadowed column" value="{{column.id}}">
       {% let crates = column.crates|as_ref %} {% include "crates.html" %}
     </div>
     {% endfor %} {% endif %}
-    <div class="sortable-ignore">Add new crate</div>
+    <div class="sortable-ignore">Add new column</div>
     {% endfor %}
   </div>
   {% endfor %}

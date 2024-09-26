@@ -42,14 +42,24 @@
 
               const payload = Array.from(sections).map((sectionElement) => {
                 const sectionName = sectionElement.getAttribute("data-section");
-                const crateElements = sectionElement.querySelectorAll(".crate");
-                const crateIds = Array.from(crateElements).map((crate) => {
-                  return crate.getAttribute("value"); // crate ID from `value` attribute
+                const columnElements =
+                  sectionElement.querySelectorAll(".column");
+
+                const columns = Array.from(columnElements).map((column) => {
+                  const columnId = column.getAttribute("value");
+                  const crateElements = column.querySelectorAll(".crate");
+                  const crateIds = Array.from(crateElements).map((crate) => {
+                    return crate.getAttribute("value"); // crate ID from `value` attribute
+                  });
+                  return {
+                    columnId,
+                    crateIds,
+                  };
                 });
 
                 return {
                   section: sectionName,
-                  crates: crateIds,
+                  columns,
                 };
               });
 
@@ -92,7 +102,10 @@
       .crate {
         width: 18rem;
         padding: 0.5rem;
-        margin-bottom: 1rem;
+      }
+
+      .crate + .crate {
+        margin-top: 1rem;
       }
 
       .shadowed {
@@ -117,6 +130,15 @@
 
       .blue-background-class {
         background: lightblue;
+      }
+
+      .column {
+        padding: 0.5rem;
+        width: fit-content;
+      }
+
+      .column {
+        margin-bottom: 2rem;
       }
     </style>
   </head>

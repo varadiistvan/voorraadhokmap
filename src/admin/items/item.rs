@@ -6,19 +6,12 @@ use axum::{
     http::Response,
     Form,
 };
-use axum_extra::{
-    headers::{authorization::Basic, Authorization},
-    TypedHeader,
-};
 use serde::Deserialize;
-use sqlx::query;
+use sqlx::{query, PgPool};
 
-use crate::{
-    admin::{
-        get_item_by_name, get_items, query_error_to_internal, AdminTemplate, ColumnsTemplate,
-        ItemTemplate, ItemsTemplate,
-    },
-    AppState,
+use crate::admin::{
+    get_columns, get_item_by_name, get_items, query_error_to_internal, AdminTemplate, ItemTemplate,
+    ItemsTemplate,
 };
 
 #[derive(Debug, Deserialize)]
@@ -27,18 +20,18 @@ pub struct ChangeNameForm {
 }
 
 pub async fn change_name(
-    State(state): State<Arc<AppState>>,
+    State(pool): State<Arc<PgPool>>,
     Path(old_name): Path<String>,
     Form(body): Form<ChangeNameForm>,
 ) -> Result<ItemTemplate, Response<Body>> {
-    let item = get_item_by_name(&old_name, &state).await?;
+    let item = get_item_by_name(&old_name, &pool).await?;
 
     let _succ = query!(
-        "UPDATE items SET name = ? WHERE name = ?",
+        "UPDATE items SET name = $1 WHERE name = $2",
         body.name,
         old_name
     )
-    .execute(&state.pool)
+    .execute(&*pool)
     .await
     .map_err(query_error_to_internal)?;
 
@@ -46,18 +39,18 @@ pub async fn change_name(
 }
 
 pub async fn delete_item(
-    State(state): State<Arc<AppState>>,
+    State(pool): State<Arc<PgPool>>,
     Path(item_name): Path<String>,
 ) -> Result<ItemsTemplate, Response<Body>> {
-    let _item = get_item_by_name(&item_name, &state).await?;
+    let _item = get_item_by_name(&item_name, &pool).await?;
 
-    let _succ = query!("DELETE FROM items WHERE items.name = ?", item_name)
-        .execute(&state.pool)
+    let _succ = query!("DELETE FROM items WHERE items.name = $1", item_name)
+        .execute(&*pool)
         .await
         .map_err(query_error_to_internal)?;
 
     Ok(ItemsTemplate {
-        items: get_items(&state).await?,
+        items: get_items(&pool).await?,
     })
 }
 
@@ -66,15 +59,18 @@ pub struct CreateItemForm {
     name: String,
 }
 pub async fn create_item(
-    State(state): State<Arc<AppState>>,
+    State(pool): State<Arc<PgPool>>,
     Form(body): Form<CreateItemForm>,
 ) -> Result<ItemsTemplate, Response<Body>> {
-    let _succ = query!("INSERT INTO items (name) VALUES (?)", body.name)
-        .execute(&state.pool)
-        .await
-        .map_err(query_error_to_internal)?;
+    let _succ = query!(
+        "INSERT INTO items (name, aliases) VALUES ($1, '{}')",
+        body.name
+    )
+    .execute(&*pool)
+    .await
+    .map_err(query_error_to_internal)?;
 
     Ok(ItemsTemplate {
-        items: get_items(&state).await?,
+        items: get_items(&pool).await?,
     })
 }

@@ -8,10 +8,6 @@ use axum::{
     routing::{delete, get, post, put},
     Router,
 };
-use axum_extra::{
-    headers::{authorization::Basic, Authorization},
-    TypedHeader,
-};
 use fake::{faker, Fake, Faker};
 pub use items::*;
 
@@ -19,6 +15,7 @@ mod columns;
 pub use columns::*;
 
 mod templates;
+use sqlx::{pool, PgPool};
 use templates::*;
 
 mod utils;
@@ -28,14 +25,10 @@ use utils::*;
 use crate::{
     middleware::AuthLayer,
     models::{Column, Crate, CrateType, Rotation, Section},
-    AppState,
 };
 
-pub async fn index(
-    auth_header: Result<TypedHeader<Authorization<Basic>>, impl Error>,
-    State(state): State<Arc<AppState>>,
-) -> Result<AdminTemplate, Response<Body>> {
-    let items = get_items(&state).await?;
+pub async fn index(State(pool): State<Arc<PgPool>>) -> Result<AdminTemplate, Response<Body>> {
+    let items = get_items(&pool).await?;
 
     let columns = HashMap::from([
         (
@@ -51,7 +44,7 @@ pub async fn index(
     Ok(AdminTemplate { items, columns })
 }
 
-pub fn get_admin_routes(auth: AuthLayer) -> Router<Arc<AppState>> {
+pub fn get_admin_routes(auth: AuthLayer) -> Router<Arc<PgPool>> {
     Router::new()
         .route("/", get(index))
         .route("/item", post(create_item))

@@ -6,5 +6,27 @@
   <div>id: {{ single_crate.id }}</div>
   <div>rotation: {{ single_crate.rotation }}</div>
   <!-- <div>content: {{ single_crate.content|json }}</div> -->
+  <div>
+    <h3>Items:</h3>
+    <hr />
+    {% for item in single_crate.content %}
+    <div class="deletable">
+      <div>{{ item.name }},</div>
+      <div class="delete">x</div>
+    </div>
+    <hr />
+    {% endfor %}
+
+    <input
+      type="text"
+      name="new_item"
+      placeholder="Add new item"
+      onkeydown="if(event.key === 'Enter') { this.dispatchEvent(new Event('submit', {bubbles: true})); }"
+      hx-put="/admin/crates/add-item/{{single_crate.id}}"
+      hx-target="closest .crate"
+      hx-swap="outerHTML"
+      hx-trigger="submit"
+    />
+  </div>
   <!-- <div>crate type: {{ single_crate.crate_type|json }}</div> -->
 </div>

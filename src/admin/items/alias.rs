@@ -11,12 +11,9 @@ use axum_extra::{
     TypedHeader,
 };
 use serde::Deserialize;
-use sqlx::query;
+use sqlx::{query, PgPool};
 
-use crate::{
-    admin::{get_item_by_name, query_error_to_internal, ItemTemplate},
-    AppState,
-};
+use crate::admin::{get_item_by_name, query_error_to_internal, ItemTemplate};
 
 #[derive(Deserialize)]
 pub struct CreateAliasForm {
@@ -24,18 +21,18 @@ pub struct CreateAliasForm {
 }
 
 pub async fn create_alias(
-    State(state): State<Arc<AppState>>,
+    State(pool): State<Arc<PgPool>>,
     Path(item_name): Path<String>,
     Form(body): Form<CreateAliasForm>,
 ) -> Result<ItemTemplate, Response<Body>> {
-    let mut item = get_item_by_name(&item_name, &state).await?;
+    let mut item = get_item_by_name(&item_name, &pool).await?;
 
     let _succ = query!(
-        "INSERT INTO item_aliases (item_name, alias) VALUES (?, ?)",
+        "UPDATE items SET aliases = aliases || $1::text WHERE name = $2",
+        body.alias,
         item_name,
-        body.alias
     )
-    .execute(&state.pool)
+    .execute(&*pool)
     .await
     .map_err(query_error_to_internal)?;
 
@@ -46,10 +43,10 @@ pub async fn create_alias(
 
 pub async fn delete_alias(
     auth_header: Result<TypedHeader<Authorization<Basic>>, impl Error>,
-    State(state): State<Arc<AppState>>,
+    State(pool): State<Arc<PgPool>>,
     Path((item_name, alias)): Path<(String, String)>,
 ) -> Result<ItemTemplate, Response<Body>> {
-    let mut item = get_item_by_name(&item_name, &state).await?;
+    let mut item = get_item_by_name(&item_name, &pool).await?;
 
     if !item.aliases.contains(&alias) {
         return Err(Response::builder()
@@ -59,11 +56,11 @@ pub async fn delete_alias(
     }
 
     let _succ = query!(
-        "DELETE FROM item_aliases WHERE item_aliases.item_name = ? AND item_aliases.alias = ?",
-        item_name,
-        alias
+        "UPDATE items set aliases = array_remove(aliases, $1) WHERE items.name = $2",
+        alias,
+        item_name
     )
-    .execute(&state.pool)
+    .execute(&*pool)
     .await
     .map_err(query_error_to_internal)?;
 
