@@ -1,0 +1,49 @@
+[package]
+name = "voorraadhokmap"
+version = "0.1.0"
+authors = ["Steve Váradi <varadiista.1@gmail.com>"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = { version = "0.4.41", features = ["serde"] }
+dioxus = { version = "0.6.3", features = ["router", "fullstack"] }
+futures-util = { version = "0.3.31", optional = true }
+sea-orm = { version = "1.1.14", optional = true, features = [
+  "macros",
+  "runtime-tokio-native-tls",
+  "sqlx-postgres",
+  "with-chrono",
+] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.141"
+# sqlx = { version = "0.8.6", features = [
+#   "migrate",
+#   "runtime-tokio",
+#   "macros",
+#   "postgres",
+#   "chrono",
+#   "json",
+# ], optional = true }
+tokio = { version = "1.47.0", features = ["full"], optional = true }
+
+[features]
+default = []
+server = ["dioxus/server", "dep:tokio", "dep:sea-orm", "dep:futures-util"]
+web = ["dioxus/web"]
+desktop = ["dioxus/desktop"]
+mobile = ["dioxus/mobile"]
+sea-orm = ["dep:sea-orm"]
+
+[profile]
+
+[profile.wasm-dev]
+inherits = "dev"
+opt-level = 1
+
+[profile.server-dev]
+inherits = "dev"
+
+[profile.android-dev]
+inherits = "dev"

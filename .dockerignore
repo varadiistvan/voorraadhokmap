@@ -1,0 +1,4 @@
+target
+.env
+.gitignore
+db_data
